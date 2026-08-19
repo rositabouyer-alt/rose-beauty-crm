@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  ROSE BEAUTY — public website (single file)
+  ============================================================
+  This page is the customer-facing site + chat widget only.
+  It is NOT a standalone app — it connects to the real Rose Beauty
+  CRM server (the rose-beauty-crm project) for live prices and for
+  the chat/booking to actually work.
+
+  BEFORE USING THIS FILE:
+    1. Make sure the rose-beauty-crm server is running somewhere
+       reachable (locally with `npm start`, or deployed to a real
+       domain).
+    2. Open this file in a text editor, find the line near the top
+       of the <script> section that says:
+           const CRM_SERVER_URL = 'http://localhost:4000';
+       and change it to wherever your CRM server actually is, e.g.
+           const CRM_SERVER_URL = 'https://your-domain.com';
+    3. Save, then just double-click this file (or host it anywhere —
+       any static file host, a subdomain, etc). No build step, no
+       backend code needed on this end.
+
+  If CRM_SERVER_URL is wrong or the server isn't running, the page
+  will still load, but the services grid stays empty and the chat
+  widget will show a connection error.
+  ============================================================
+-->
+<html lang="fa" dir="rtl" id="html-root">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rose Beauty | سالن زیبایی و مرکز رزرو آنلاین</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,700;1,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #1c1220;
+  --ink-2: #241628;
+  --panel: #2a1a2e;
+  --cream: #fff6ef;
+  --rose: #ff6fa5;
+  --rose-deep: #e8467f;
+  --violet: #6b3fa0;
+  --gold: #e8b56d;
+  --text: #f6eef2;
+  --muted: #cbb9c8;
+  --radius: 20px;
+  font-family: 'Vazirmatn', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--ink);
+  color: var(--text);
+  font-family: 'Vazirmatn', system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+h1, h2, h3 { font-weight: 800; margin: 0 0 12px; line-height: 1.25; }
+p { line-height: 1.9; color: var(--muted); margin: 0; }
+a { color: inherit; text-decoration: none; }
+
+.eyebrow {
+  display: inline-block;
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+
+.section-inner { max-width: 1140px; margin: 0 auto; padding: 90px 28px; position: relative; z-index: 1; }
+.section-sub { max-width: 520px; margin-bottom: 40px; }
+
+/* ================= SIGNATURE ANIMATED BACKGROUND ================= */
+.silk-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: radial-gradient(circle at 30% 10%, #2b1a30, var(--ink) 65%); }
+.silk-svg { width: 100%; height: 100%; }
+.ribbon { animation: drift 26s ease-in-out infinite; opacity: 0.55; }
+.ribbon1 { animation-duration: 24s; }
+.ribbon2 { animation-duration: 30s; animation-direction: reverse; }
+.ribbon3 { animation-duration: 34s; }
+@keyframes drift {
+  0%   { transform: translate(0,0) scaleY(1); }
+  50%  { transform: translate(-40px, 30px) scaleY(1.08); }
+  100% { transform: translate(0,0) scaleY(1); }
+}
+.grain {
+  position: absolute; inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 3px 3px;
+  opacity: 0.5;
+}
+
+/* ================= NAV ================= */
+.nav { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(14px); background: rgba(28,18,32,0.65); border-bottom: 1px solid rgba(255,255,255,0.06); }
+.nav-inner { max-width: 1140px; margin: 0 auto; padding: 16px 28px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.brand { display: flex; align-items: center; gap: 10px; color: var(--text); }
+.rose-mark { color: var(--rose); flex-shrink: 0; }
+.brand-text { display: flex; flex-direction: column; line-height: 1.1; }
+.brand-fa { font-size: 16px; font-weight: 800; }
+.brand-en { font-family: 'Playfair Display', serif; font-size: 10px; letter-spacing: 0.18em; color: var(--gold); font-style: normal; }
+
+.nav-links { display: flex; gap: 26px; font-size: 14px; color: var(--muted); }
+.nav-links a:hover { color: var(--rose); }
+
+.nav-actions { display: flex; align-items: center; gap: 12px; }
+.lang-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: var(--text); padding: 8px 12px; border-radius: 999px; font-size: 12px; cursor: pointer; }
+.btn-cta { background: linear-gradient(135deg, var(--rose), var(--rose-deep)); color: #fff; border: none; padding: 11px 20px; border-radius: 999px; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 8px 22px rgba(232,70,127,0.35); transition: transform .15s ease, box-shadow .15s ease; font-family: inherit; }
+.btn-cta:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(232,70,127,0.45); }
+.btn-cta-lg { padding: 15px 28px; font-size: 15.5px; }
+.btn-ghost { border: 1px solid rgba(255,255,255,0.18); padding: 14px 24px; border-radius: 999px; font-size: 14.5px; color: var(--text); transition: border-color .15s ease, background .15s ease; }
+.btn-ghost:hover { border-color: var(--gold); background: rgba(232,181,109,0.08); }
+
+/* ================= HERO ================= */
+.hero { position: relative; z-index: 1; padding-top: 40px; }
+.hero-inner { max-width: 1140px; margin: 0 auto; padding: 60px 28px 40px; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 40px; align-items: center; }
+.hero h1 { font-size: 46px; background: linear-gradient(90deg, #fff, var(--gold)); -webkit-background-clip: text; background-clip: text; color: transparent; letter-spacing: -0.01em; }
+.hero-sub { max-width: 480px; margin-bottom: 30px; font-size: 15.5px; }
+.hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 26px; }
+.hero-trust { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+.hero-trust .dot { color: var(--rose); }
+
+.hero-mark { position: relative; display: flex; align-items: center; justify-content: center; }
+.rose-hero-svg { width: 100%; max-width: 380px; }
+.draw-path { stroke-dasharray: 400; stroke-dashoffset: 400; animation: draw 3.5s ease forwards, glow 4s ease-in-out infinite 3.5s; }
+.draw-path-delay { animation-delay: 0.6s, 4.1s; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes glow { 0%,100% { filter: drop-shadow(0 0 0px var(--rose)); } 50% { filter: drop-shadow(0 0 8px var(--rose)); } }
+
+.orbit-chip {
+  position: absolute; width: 48px; height: 48px; border-radius: 50%;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+  display: flex; align-items: center; justify-content: center; color: var(--rose);
+  backdrop-filter: blur(6px);
+  animation: orbit 12s linear infinite;
+}
+.chip1 { top: 6%; left: 12%; animation-duration: 14s; }
+.chip2 { top: 70%; left: 4%; animation-duration: 17s; animation-direction: reverse; }
+.chip3 { top: 10%; right: 6%; animation-duration: 19s; }
+.chip4 { bottom: 4%; right: 14%; animation-duration: 15s; animation-direction: reverse; }
+@keyframes orbit { 0% { transform: translateY(0px); } 50% { transform: translateY(-16px); } 100% { transform: translateY(0px); } }
+
+/* ================= SERVICES ================= */
+.services { position: relative; z-index: 1; }
+.services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
+.service-card {
+  background: linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius);
+  padding: 22px;
+  transition: transform .2s ease, border-color .2s ease;
+}
+.service-card:hover { transform: translateY(-5px); border-color: rgba(255,111,165,0.4); }
+.service-icon { margin-bottom: 10px; color: var(--rose); }
+.service-desc { font-size: 12.5px; color: var(--muted); line-height: 1.7; margin-bottom: 12px; min-height: 42px; }
+.service-name { font-weight: 700; font-size: 16px; margin-bottom: 6px; }
+.service-meta { font-size: 12.5px; color: var(--muted); margin-bottom: 16px; }
+.service-price { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--gold); margin-bottom: 16px; }
+.service-select-btn {
+  width: 100%; background: rgba(255,111,165,0.12); border: 1px solid rgba(255,111,165,0.3);
+  color: var(--rose); padding: 10px; border-radius: 12px; font-size: 13.5px; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: background .15s ease;
+}
+.service-select-btn:hover { background: rgba(255,111,165,0.22); }
+.service-skeleton { height: 190px; border-radius: var(--radius); background: linear-gradient(100deg, rgba(255,255,255,0.03) 30%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 70%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ================= WHY ================= */
+.why { position: relative; z-index: 1; background: linear-gradient(180deg, transparent, rgba(255,255,255,0.02) 20%, rgba(255,255,255,0.02) 80%, transparent); }
+.why-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 30px; padding-top: 40px; padding-bottom: 40px; }
+.why-item { text-align: center; }
+.why-icon { font-size: 30px; margin-bottom: 12px; color: var(--rose); display: flex; justify-content: center; }
+.why-icon-alt1 { color: var(--gold); }
+.why-icon-alt2 { color: var(--violet); }
+.why-item h3 { font-size: 17px; }
+.why-item p { font-size: 13.5px; max-width: 260px; margin: 0 auto; }
+
+/* ================= VISIT ================= */
+.visit { position: relative; z-index: 1; }
+.visit-inner { display: flex; align-items: center; justify-content: space-between; gap: 30px; flex-wrap: wrap; background: linear-gradient(120deg, rgba(255,111,165,0.14), rgba(107,63,160,0.14)); border: 1px solid rgba(255,255,255,0.08); border-radius: 28px; padding: 50px; }
+.visit-hours { font-family: 'Playfair Display', serif; font-size: 26px; color: var(--gold); font-style: italic; }
+.visit-cta { text-align: center; }
+.visit-cta p { margin-bottom: 14px; color: var(--text); }
+
+/* ================= FOOTER ================= */
+.footer { position: relative; z-index: 1; border-top: 1px solid rgba(255,255,255,0.06); }
+.footer-inner { display: flex; align-items: center; justify-content: space-between; padding: 30px 28px; flex-wrap: wrap; gap: 12px; }
+.footer-brand { font-weight: 700; font-size: 14px; }
+.footer-copy { font-size: 12px; }
+
+/* ================= CHAT LAUNCHER ================= */
+.chat-launcher {
+  position: fixed; bottom: 26px; left: 26px; z-index: 100;
+  width: 62px; height: 62px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--rose), var(--violet));
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; box-shadow: 0 10px 30px rgba(232,70,127,0.45);
+  transition: transform .2s ease;
+}
+.chat-launcher:hover { transform: scale(1.07); }
+.chat-launcher-pulse {
+  position: absolute; inset: -6px; border-radius: 50%;
+  border: 2px solid var(--rose); opacity: 0.6;
+  animation: pulse 2.4s ease-out infinite;
+}
+@keyframes pulse { 0% { transform: scale(0.9); opacity: 0.6; } 100% { transform: scale(1.5); opacity: 0; } }
+
+/* ================= CHAT PANEL ================= */
+.chat-panel {
+  position: fixed; bottom: 100px; left: 26px; z-index: 100;
+  width: 360px; max-width: calc(100vw - 40px);
+  height: 520px; max-height: calc(100vh - 140px);
+  background: var(--cream); color: #2c2233;
+  border-radius: 22px; overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+  display: none; flex-direction: column;
+  transform: translateY(16px); opacity: 0;
+  transition: transform .25s ease, opacity .25s ease;
+}
+.chat-panel.open { display: flex; transform: translateY(0); opacity: 1; }
+
+.chat-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 18px; background: linear-gradient(135deg, var(--rose-deep), var(--violet)); color: #fff;
+}
+.chat-panel-who { display: flex; align-items: center; gap: 10px; }
+.chat-avatar { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255,255,255,0.4); }
+.chat-panel-title { font-weight: 700; font-size: 14.5px; }
+.chat-panel-status { font-size: 11px; opacity: 0.9; display: flex; align-items: center; gap: 5px; }
+.online-dot { width: 6px; height: 6px; border-radius: 50%; background: #7CFF9E; box-shadow: 0 0 6px #7CFF9E; display: inline-block; }
+.chat-close-btn { background: rgba(255,255,255,0.18); border: none; color: #fff; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 12px; }
+
+.chat-log { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.chat-msg { max-width: 82%; padding: 10px 14px; border-radius: 16px; font-size: 13.5px; line-height: 1.7; white-space: pre-wrap; animation: fadeIn .3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.chat-msg.bot { align-self: flex-start; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.06); border-radius: 16px 16px 16px 4px; }
+.chat-msg.user { align-self: flex-end; background: linear-gradient(135deg, var(--rose), var(--rose-deep)); color: #fff; border-radius: 16px 16px 4px 16px; }
+[dir="rtl"] .chat-msg.bot { border-radius: 16px 16px 4px 16px; }
+[dir="rtl"] .chat-msg.user { border-radius: 16px 16px 16px 4px; }
+
+.chat-typing .bubble-dots { display: flex; gap: 4px; padding: 12px 16px; background: #fff; border-radius: 16px; width: fit-content; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+.bubble-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--rose); opacity: 0.5; animation: blink 1.2s infinite; }
+.bubble-dots span:nth-child(2) { animation-delay: .2s; }
+.bubble-dots span:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 0%,80%,100% { opacity: .25; } 40% { opacity: 1; } }
+
+.chat-suggestions { display: flex; gap: 8px; padding: 0 14px 10px; overflow-x: auto; }
+.chip { flex-shrink: 0; background: #fff; border: 1px solid #f0d5e0; color: var(--rose-deep); padding: 7px 12px; border-radius: 20px; font-size: 12px; font-family: inherit; cursor: pointer; white-space: nowrap; }
+.chip:hover { background: var(--rose); color: #fff; border-color: var(--rose); }
+
+.chat-input-row { display: flex; gap: 8px; padding: 12px 14px; background: #fff; border-top: 1px solid rgba(232,70,127,0.08); }
+.chat-input-row input { flex: 1; border: 1px solid #f0d5e0; background: #fff6f0; border-radius: 20px; padding: 10px 16px; font-size: 13.5px; font-family: inherit; outline: none; color: #2c2233; }
+.chat-input-row input:focus { border-color: var(--rose); }
+.chat-send-btn { width: 38px; height: 38px; min-width: 38px; border-radius: 50%; border: none; background: linear-gradient(135deg, var(--rose), var(--rose-deep)); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+[dir="rtl"] .chat-send-btn svg { transform: scaleX(-1); }
+
+@media (max-width: 860px) {
+  .hero-inner { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 34px; }
+  .nav-links { display: none; }
+  .chat-panel { left: 12px; right: 12px; width: auto; }
+}
+
+</style>
+</head>
+<body>
+
+<svg style="display:none">
+  <symbol id="rose-icon-web" viewBox="0 0 64 64">
+    <path d="M32 6c6 4 10 10 8 18-1 5-6 8-11 6-4-2-5-7-2-10 3-3 8-2 9 2" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    <path d="M32 58c-9-10-15-22-10-34 3-7 10-11 17-9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="32" cy="22" r="4" fill="currentColor"/>
+  </symbol>
+  <!-- Nail Appointment: polished nail + shine -->
+  <symbol id="icon-nail-appt" viewBox="0 0 64 64">
+    <path d="M24 10c-6 6-8 16-8 24 0 12 7 20 16 20s16-8 16-20c0-8-2-18-8-24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M22 12c4-3 8-4 10-4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="42" cy="16" r="2.6" fill="currentColor"/>
+    <circle cx="47" cy="24" r="1.6" fill="currentColor"/>
+  </symbol>
+  <!-- Blow-dry: hairdryer with air lines -->
+  <symbol id="icon-blowdry" viewBox="0 0 64 64">
+    <path d="M14 22c0-6 5-11 12-11h6c7 0 11 5 11 10s-5 8-10 8h-3l-2 14-6-2 2-12h-2c-5 0-8-3-8-7z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M44 20h9M45 27h8M44 34h6" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  </symbol>
+  <!-- Hair Bleach/Color: drop with swirl -->
+  <symbol id="icon-color" viewBox="0 0 64 64">
+    <path d="M32 8c9 12 16 22 16 30a16 16 0 1 1-32 0c0-8 7-18 16-30z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M24 38c0 5 4 8 8 8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  </symbol>
+  <!-- Nail Repair: nail with mend stitch -->
+  <symbol id="icon-repair" viewBox="0 0 64 64">
+    <path d="M24 10c-6 6-8 16-8 24 0 12 7 20 16 20s16-8 16-20c0-8-2-18-8-24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M20 32l8-6 4 6 8-6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <!-- Nail Extension: elongated nail with sparkle -->
+  <symbol id="icon-extension" viewBox="0 0 64 64">
+    <path d="M26 6c-7 8-10 20-10 28 0 13 7 22 16 22s16-9 16-22c0-8-3-20-10-28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M44 12l3 3-3 3-3-3z" fill="currentColor"/>
+  </symbol>
+  <!-- Haircut: scissors -->
+  <symbol id="icon-haircut" viewBox="0 0 64 64">
+    <circle cx="16" cy="18" r="6" fill="none" stroke="currentColor" stroke-width="3"/>
+    <circle cx="16" cy="46" r="6" fill="none" stroke="currentColor" stroke-width="3"/>
+    <path d="M21 22l30 20M21 42l30-20" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  </symbol>
+  <!-- Bridal: tiara -->
+  <symbol id="icon-bridal" viewBox="0 0 64 64">
+    <path d="M10 42l6-20 10 12 6-18 6 18 10-12 6 20z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M10 42h44" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="32" cy="18" r="2.4" fill="currentColor"/>
+  </symbol>
+</svg>
+
+<!-- ================= ANIMATED SIGNATURE BACKGROUND ================= -->
+<div class="silk-bg" aria-hidden="true">
+  <svg class="silk-svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <linearGradient id="ribbonA" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#ff6fa5"/>
+        <stop offset="100%" stop-color="#6b3fa0"/>
+      </linearGradient>
+      <linearGradient id="ribbonB" x1="1" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#e8b56d"/>
+        <stop offset="100%" stop-color="#ff6fa5"/>
+      </linearGradient>
+    </defs>
+    <path class="ribbon ribbon1" d="M -200 300 C 200 150, 500 500, 900 320 S 1500 150, 1800 350" stroke="url(#ribbonA)" stroke-width="2" fill="none"/>
+    <path class="ribbon ribbon2" d="M -200 550 C 250 700, 600 350, 950 600 S 1450 750, 1800 550" stroke="url(#ribbonB)" stroke-width="1.5" fill="none"/>
+    <path class="ribbon ribbon3" d="M -200 120 C 300 320, 700 20, 1050 220 S 1550 420, 1800 180" stroke="url(#ribbonA)" stroke-width="1" fill="none" opacity="0.5"/>
+  </svg>
+  <div class="grain"></div>
+</div>
+
+<!-- ================= NAV ================= -->
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top">
+      <svg class="rose-mark" viewBox="0 0 64 64" width="34" height="34">
+        <path d="M32 6c6 4 10 10 8 18-1 5-6 8-11 6-4-2-5-7-2-10 3-3 8-2 9 2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="M32 58c-9-10-15-22-10-34 3-7 10-11 17-9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        <circle cx="32" cy="22" r="3.4" fill="currentColor"/>
+      </svg>
+      <span class="brand-text">
+        <b class="brand-fa">رز بیوتی</b>
+        <i class="brand-en">ROSE BEAUTY</i>
+      </span>
+    </a>
+
+    <nav class="nav-links">
+      <a href="#services" data-fa="خدمات" data-en="Services">خدمات</a>
+      <a href="#why" data-fa="چرا رز بیوتی" data-en="Why Us">چرا رز بیوتی</a>
+      <a href="#visit" data-fa="ساعات و آدرس" data-en="Visit Us">ساعات و آدرس</a>
+    </nav>
+
+    <div class="nav-actions">
+      <button id="lang-toggle" class="lang-btn">EN / فا</button>
+      <button class="btn-cta" id="nav-book-btn" data-fa="رزرو نوبت" data-en="Book Now">رزرو نوبت</button>
+    </div>
+  </div>
+</header>
+
+<!-- ================= HERO ================= -->
+<section class="hero" id="top">
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <span class="eyebrow" data-fa="سالن زیبایی رز بیوتی" data-en="ROSE BEAUTY SALON">سالن زیبایی رز بیوتی</span>
+      <h1>
+        <span data-fa="زیبایی شما، هنر ماست" data-en="Your beauty, crafted with care">زیبایی شما، هنر ماست</span>
+      </h1>
+      <p class="hero-sub" data-fa="از کاشت ناخن تا رنگ مو و آرایش عروس؛ با دستیار هوشمند رز، همین الان و در کمتر از یک دقیقه نوبتتون رو رزرو کنید."
+         data-en="From nail extensions to hair color and bridal makeup — book your appointment in under a minute with our smart assistant, Rose AI.">
+        از کاشت ناخن تا رنگ مو و آرایش عروس؛ با دستیار هوشمند رز، همین الان و در کمتر از یک دقیقه نوبتتون رو رزرو کنید.
+      </p>
+      <div class="hero-actions">
+        <button class="btn-cta btn-cta-lg" id="hero-book-btn" data-fa="گفتگو با رز و رزرو نوبت" data-en="Chat with Rose &amp; Book">گفتگو با رز و رزرو نوبت</button>
+        <a href="#services" class="btn-ghost" data-fa="مشاهده خدمات و قیمت‌ها" data-en="See Services &amp; Prices">مشاهده خدمات و قیمت‌ها</a>
+      </div>
+      <div class="hero-trust">
+        <span data-fa="۹ صبح تا ۸ شب، هر روز" data-en="Open 9am–8pm, every day">۹ صبح تا ۸ شب، هر روز</span>
+        <span class="dot">•</span>
+        <span data-fa="پاسخ‌گویی آنی توسط رز AI" data-en="Instant replies from Rose AI">پاسخ‌گویی آنی توسط رز AI</span>
+      </div>
+    </div>
+
+    <div class="hero-mark">
+      <svg viewBox="0 0 400 400" class="rose-hero-svg">
+        <circle cx="200" cy="200" r="170" fill="none" stroke="url(#ribbonA)" stroke-width="1" opacity="0.35"/>
+        <path d="M200 60c40 26 66 66 52 118-8 32-40 50-70 38-26-12-32-46-12-64 20-18 52-12 58 14"
+              fill="none" stroke="url(#ribbonA)" stroke-width="3" stroke-linecap="round" class="draw-path"/>
+        <path d="M200 340c-58-62-94-138-62-212 20-46 66-70 108-56"
+              fill="none" stroke="url(#ribbonB)" stroke-width="3" stroke-linecap="round" class="draw-path draw-path-delay"/>
+        <circle cx="200" cy="140" r="8" fill="#ff6fa5"/>
+      </svg>
+      <div class="orbit-chip chip1"><svg viewBox="0 0 64 64" width="20" height="20"><use href="#rose-icon-web"/></svg></div>
+      <div class="orbit-chip chip2"><svg viewBox="0 0 64 64" width="20" height="20"><use href="#rose-icon-web"/></svg></div>
+      <div class="orbit-chip chip3"><svg viewBox="0 0 64 64" width="20" height="20"><use href="#rose-icon-web"/></svg></div>
+      <div class="orbit-chip chip4"><svg viewBox="0 0 64 64" width="20" height="20"><use href="#rose-icon-web"/></svg></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SERVICES ================= -->
+<section class="services" id="services">
+  <div class="section-inner">
+    <span class="eyebrow" data-fa="لیست خدمات" data-en="OUR MENU">لیست خدمات</span>
+    <h2 data-fa="خدمات و قیمت‌ها" data-en="Services & Prices">خدمات و قیمت‌ها</h2>
+    <p class="section-sub" data-fa="قیمت‌ها به‌صورت زنده از سیستم رزرو خونده میشه؛ همیشه به‌روزه." data-en="Prices are pulled live from our booking system — always current.">
+      قیمت‌ها به‌صورت زنده از سیستم رزرو خونده میشه؛ همیشه به‌روزه.
+    </p>
+
+    <div class="services-grid" id="services-grid">
+      <!-- filled by website.js from /api/services -->
+      <div class="service-skeleton"></div>
+      <div class="service-skeleton"></div>
+      <div class="service-skeleton"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= WHY US ================= -->
+<section class="why" id="why">
+  <div class="section-inner why-grid">
+    <div class="why-item">
+      <div class="why-icon"><svg viewBox="0 0 64 64" width="30" height="30"><use href="#rose-icon-web"/></svg></div>
+      <h3 data-fa="تجربه‌ی لوکس" data-en="A luxury experience">تجربه‌ی لوکس</h3>
+      <p data-fa="فضایی آروم و شیک، طراحی‌شده برای استراحت واقعی شما." data-en="A calm, elegant space designed for real relaxation.">فضایی آروم و شیک، طراحی‌شده برای استراحت واقعی شما.</p>
+    </div>
+    <div class="why-item">
+      <div class="why-icon why-icon-alt1"><svg viewBox="0 0 64 64" width="30" height="30"><use href="#rose-icon-web"/></svg></div>
+      <h3 data-fa="محصولات درجه‌یک" data-en="Premium products">محصولات درجه‌یک</h3>
+      <p data-fa="فقط از برندهای معتبر و مواد اورجینال استفاده می‌کنیم." data-en="We only use trusted, original brand products.">فقط از برندهای معتبر و مواد اورجینال استفاده می‌کنیم.</p>
+    </div>
+    <div class="why-item">
+      <div class="why-icon why-icon-alt2"><svg viewBox="0 0 64 64" width="30" height="30"><use href="#rose-icon-web"/></svg></div>
+      <h3 data-fa="رزرو در ۶۰ ثانیه" data-en="Book in 60 seconds">رزرو در ۶۰ ثانیه</h3>
+      <p data-fa="کافیه با رز چت کنید؛ نوبتتون همون لحظه ثبت میشه." data-en="Just chat with Rose — your appointment is set instantly.">کافیه با رز چت کنید؛ نوبتتون همون لحظه ثبت میشه.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= VISIT / HOURS ================= -->
+<section class="visit" id="visit">
+  <div class="section-inner visit-inner">
+    <div>
+      <span class="eyebrow" data-fa="ساعات کاری" data-en="WORKING HOURS">ساعات کاری</span>
+      <h2 data-fa="هر روز در خدمت شما" data-en="Open every day for you">هر روز در خدمت شما</h2>
+      <p class="visit-hours" data-fa="۹ صبح — ۸ شب" data-en="9:00 AM — 8:00 PM">۹ صبح — ۸ شب</p>
+    </div>
+    <div class="visit-cta">
+      <p data-fa="سوالی دارید یا می‌خواید نوبت بگیرید؟" data-en="Have a question, or want to book?">سوالی دارید یا می‌خواید نوبت بگیرید؟</p>
+      <button class="btn-cta" id="visit-book-btn" data-fa="شروع گفتگو با رز" data-en="Start chatting with Rose">شروع گفتگو با رز</button>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="section-inner footer-inner">
+    <div class="brand footer-brand">
+      <svg class="rose-mark" viewBox="0 0 64 64" width="24" height="24">
+        <path d="M32 6c6 4 10 10 8 18-1 5-6 8-11 6-4-2-5-7-2-10 3-3 8-2 9 2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="M32 58c-9-10-15-22-10-34 3-7 10-11 17-9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        <circle cx="32" cy="22" r="3.4" fill="currentColor"/>
+      </svg>
+      <span data-fa="رز بیوتی" data-en="Rose Beauty">رز بیوتی</span>
+    </div>
+    <p class="footer-copy" data-fa="© تمامی حقوق محفوظ است." data-en="© All rights reserved.">© تمامی حقوق محفوظ است.</p>
+  </div>
+</footer>
+
+<!-- ================= FLOATING CHAT WIDGET ================= -->
+<div id="chat-launcher" class="chat-launcher" aria-label="Open chat">
+  <span class="chat-launcher-pulse"></span>
+  <svg viewBox="0 0 64 64" width="28" height="28">
+    <path d="M32 6c6 4 10 10 8 18-1 5-6 8-11 6-4-2-5-7-2-10 3-3 8-2 9 2" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M32 58c-9-10-15-22-10-34 3-7 10-11 17-9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
+    <circle cx="32" cy="22" r="3.4" fill="#fff"/>
+  </svg>
+</div>
+
+<div id="chat-panel" class="chat-panel">
+  <div class="chat-panel-header">
+    <div class="chat-panel-who">
+      <div class="chat-avatar">
+        <svg viewBox="0 0 64 64" width="22" height="22">
+          <path d="M32 6c6 4 10 10 8 18-1 5-6 8-11 6-4-2-5-7-2-10 3-3 8-2 9 2" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
+          <path d="M32 58c-9-10-15-22-10-34 3-7 10-11 17-9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
+          <circle cx="32" cy="22" r="3.4" fill="#fff"/>
+        </svg>
+      </div>
+      <div>
+        <div class="chat-panel-title">Rose AI</div>
+        <div class="chat-panel-status"><span class="online-dot"></span><span data-fa="آنلاین" data-en="Online">آنلاین</span></div>
+      </div>
+    </div>
+    <button id="chat-close-btn" class="chat-close-btn" aria-label="Close">✕</button>
+  </div>
+
+  <div class="chat-log" id="chat-log"></div>
+
+  <div class="chat-suggestions" id="chat-suggestions">
+    <button class="chip" data-fa="قیمت‌ها چیه؟" data-en="What are your prices?">🌹 قیمت‌ها</button>
+    <button class="chip" data-fa="می‌خوام نوبت بگیرم" data-en="I want to book an appointment">🌹 رزرو نوبت</button>
+    <button class="chip" data-fa="ساعات کاری چیه؟" data-en="What are your hours?">🌹 ساعات کاری</button>
+  </div>
+
+  <form class="chat-input-row" id="chat-form">
+    <input id="chat-input" type="text" data-fa-ph="پیامتون رو بنویسید..." data-en-ph="Type your message..." placeholder="پیامتون رو بنویسید..." autocomplete="off" />
+    <button type="submit" class="chat-send-btn" aria-label="Send">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </form>
+</div>
+
+<script>
+// ============================================================
+// CONFIG — point this at wherever your Rose Beauty CRM server
+// (the rose-beauty-crm project) is actually running.
+// Examples:
+//   const CRM_SERVER_URL = 'http://localhost:4000';      // testing on your own machine
+//   const CRM_SERVER_URL = 'https://your-domain.com';    // once it's deployed for real
+// The CRM server MUST be running and reachable at this address,
+// or the chat widget and live prices on this page will not work.
+// ============================================================
+const CRM_SERVER_URL = 'http://localhost:4000';
+const API = CRM_SERVER_URL + '/api';
+
+// ---------------- language toggle ----------------
+let currentLang = 'fa';
+const htmlRoot = document.getElementById('html-root');
+
+function applyLang(lang) {
+  currentLang = lang;
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
+  document.querySelectorAll('[data-fa][data-en]').forEach((el) => {
+    el.innerHTML = lang === 'fa' ? el.dataset.fa : el.dataset.en;
+  });
+  const chatInput = document.getElementById('chat-input');
+  if (chatInput) {
+    chatInput.placeholder = lang === 'fa' ? chatInput.dataset.faPh : chatInput.dataset.enPh;
+  }
+}
+
+document.getElementById('lang-toggle').addEventListener('click', () => {
+  applyLang(currentLang === 'fa' ? 'en' : 'fa');
+});
+
+// ---------------- live services from the real CRM API ----------------
+// Each known service gets its own hand-drawn line icon (same visual family as
+// the rose logo) plus a real description. Anything not recognized below still
+// works fine - it just falls back to the plain rose mark + a generic blurb.
+const SERVICE_DETAILS = [
+  {
+    match: ['nail appointment', 'وقت ناخن'],
+    icon: 'icon-nail-appt',
+    desc: {
+      fa: 'مانیکور کامل، فرم‌دهی و لاک‌زنی حرفه‌ای برای ناخن‌های سالم و شیک.',
+      en: 'A full manicure with shaping and professional polish for healthy, elegant nails.',
+    },
+  },
+  {
+    match: ['blow-dry', 'brushing', 'براشینگ'],
+    icon: 'icon-blowdry',
+    desc: {
+      fa: 'براشینگ حرفه‌ای برای موهایی صاف، پرحجم و درخشان، مناسب هر مناسبتی.',
+      en: 'A professional blow-dry for smooth, voluminous, shiny hair — perfect for any occasion.',
+    },
+  },
+  {
+    match: ['bleach', 'color', 'دکلره', 'رنگ'],
+    icon: 'icon-color',
+    desc: {
+      fa: 'دکلره و رنگ مو با محصولات درجه‌یک، برای رنگی یکدست و ماندگار.',
+      en: 'Hair bleaching and coloring with premium products for an even, long-lasting result.',
+    },
+  },
+  {
+    match: ['repair', 'ترمیم'],
+    icon: 'icon-repair',
+    desc: {
+      fa: 'ترمیم ناخن‌های شکسته یا آسیب‌دیده و بازگردوندن ظاهر طبیعی و سالم اون‌ها.',
+      en: 'Fixes broken or damaged nails and restores their natural, healthy look.',
+    },
+  },
+  {
+    match: ['extension', 'کاشت'],
+    icon: 'icon-extension',
+    desc: {
+      fa: 'کاشت ناخن با ژل یا اکریلیک، برای طول و فرم دلخواه شما با کیفیت بالا.',
+      en: 'Gel or acrylic nail extensions, shaped and lengthened exactly to your taste.',
+    },
+  },
+  {
+    match: ['haircut', 'کوتاهی'],
+    icon: 'icon-haircut',
+    desc: {
+      fa: 'کوتاهی و فرم‌دهی حرفه‌ای مو، متناسب با فرم صورت و سبک شما.',
+      en: 'A precise, professional haircut styled to match your face shape and personal style.',
+    },
+  },
+  {
+    match: ['bridal', 'عروس'],
+    icon: 'icon-bridal',
+    desc: {
+      fa: 'پکیج کامل آرایش و شینیون عروس، از مشاوره تا اجرای نهایی در روز مراسم.',
+      en: 'A complete bridal hair & makeup package, from consultation to the big day itself.',
+    },
+  },
+];
+
+function getServiceDetail(nameEn, nameFa) {
+  const key = (nameEn + ' ' + nameFa).toLowerCase();
+  return SERVICE_DETAILS.find((d) => d.match.some((k) => key.includes(k)));
+}
+
+function serviceIconSvg(iconId) {
+  return `<svg viewBox="0 0 64 64" width="26" height="26"><use href="#${iconId}"/></svg>`;
+}
+
+const ROSE_ICON_SVG = serviceIconSvg('rose-icon-web');
+
+function formatPrice(p) {
+  return Number(p).toLocaleString('en-US') + ' T';
+}
+
+async function loadServices() {
+  try {
+    const res = await fetch(`${API}/services`);
+    const services = (await res.json()).filter((s) => s.active);
+    const grid = document.getElementById('services-grid');
+    grid.innerHTML = services
+      .map((s) => {
+        const detail = getServiceDetail(s.name_en, s.name_fa);
+        const icon = detail ? serviceIconSvg(detail.icon) : ROSE_ICON_SVG;
+        const descFa = detail ? detail.desc.fa : 'این خدمت رو با تیم متخصص سالن Rose Beauty رزرو کنید.';
+        const descEn = detail ? detail.desc.en : 'Book this treatment with the Rose Beauty expert team.';
+        return `
+      <div class="service-card">
+        <div class="service-icon">${icon}</div>
+        <div class="service-name" data-fa="${escapeHtml(s.name_fa)}" data-en="${escapeHtml(s.name_en)}">${escapeHtml(currentLang === 'fa' ? s.name_fa : s.name_en)}</div>
+        <div class="service-desc" data-fa="${escapeHtml(descFa)}" data-en="${escapeHtml(descEn)}">${escapeHtml(currentLang === 'fa' ? descFa : descEn)}</div>
+        <div class="service-meta" data-fa="حدود ${s.duration_minutes} دقیقه" data-en="About ${s.duration_minutes} minutes">حدود ${s.duration_minutes} دقیقه</div>
+        <div class="service-price">${formatPrice(s.price)}</div>
+        <button class="service-select-btn" data-service-en="${escapeHtml(s.name_en)}" data-fa="این خدمت رو رزرو کن" data-en="Book this service">این خدمت رو رزرو کن</button>
+      </div>`;
+      })
+      .join('');
+
+    grid.querySelectorAll('.service-select-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        openChat();
+        const msg = currentLang === 'fa'
+          ? `می‌خوام این خدمت رو رزرو کنم: ${btn.dataset.serviceEn}`
+          : `I want to book: ${btn.dataset.serviceEn}`;
+        sendChatMessage(msg);
+      });
+    });
+    applyLang(currentLang);
+  } catch (err) {
+    console.error('Failed to load services', err);
+  }
+}
+
+function escapeHtml(str) {
+  return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ---------------- chat widget wired to the real CRM booking/AI engine ----------------
+const launcher = document.getElementById('chat-launcher');
+const panel = document.getElementById('chat-panel');
+const chatLog = document.getElementById('chat-log');
+const chatForm = document.getElementById('chat-form');
+const chatInput = document.getElementById('chat-input');
+
+let visitorId = localStorage.getItem('rb_visitor_id');
+if (!visitorId) {
+  visitorId = 'visitor-' + Math.random().toString(36).slice(2, 12);
+  localStorage.setItem('rb_visitor_id', visitorId);
+}
+
+function openChat() {
+  panel.classList.add('open');
+  if (chatLog.children.length === 0) {
+    addBotMessage(
+      currentLang === 'fa'
+        ? 'سلام 🌹 به رز بیوتی خوش اومدید! من رز هستم، دستیار هوشمند سالن. می‌تونم درباره‌ی خدمات، قیمت‌ها و رزرو نوبت کمکتون کنم.'
+        : 'Hi 🌹 Welcome to Rose Beauty! I\'m Rose, the salon\'s smart assistant. I can help with services, prices, and booking an appointment.'
+    );
+  }
+  chatInput.focus();
+}
+function closeChat() { panel.classList.remove('open'); }
+
+launcher.addEventListener('click', () => (panel.classList.contains('open') ? closeChat() : openChat()));
+document.getElementById('chat-close-btn').addEventListener('click', closeChat);
+document.getElementById('nav-book-btn').addEventListener('click', openChat);
+document.getElementById('hero-book-btn').addEventListener('click', openChat);
+document.getElementById('visit-book-btn').addEventListener('click', openChat);
+
+document.getElementById('chat-suggestions').addEventListener('click', (e) => {
+  const chip = e.target.closest('.chip');
+  if (chip) sendChatMessage(currentLang === 'fa' ? chip.dataset.fa : chip.dataset.en);
+});
+
+function addUserMessage(text) {
+  const div = document.createElement('div');
+  div.className = 'chat-msg user';
+  div.textContent = text;
+  chatLog.appendChild(div);
+  scrollChat();
+}
+function addBotMessage(text) {
+  const div = document.createElement('div');
+  div.className = 'chat-msg bot';
+  div.textContent = text;
+  chatLog.appendChild(div);
+  scrollChat();
+}
+function showTyping() {
+  const div = document.createElement('div');
+  div.className = 'chat-msg chat-typing';
+  div.id = 'typing-indicator';
+  div.innerHTML = `<div class="bubble-dots"><span></span><span></span><span></span></div>`;
+  chatLog.appendChild(div);
+  scrollChat();
+}
+function hideTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+function scrollChat() { chatLog.scrollTop = chatLog.scrollHeight; }
+
+async function sendChatMessage(text) {
+  if (!text || !text.trim()) return;
+  addUserMessage(text);
+  showTyping();
+  try {
+    const res = await fetch(`${API}/messages/website/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ visitorId, name: 'Website Visitor', text }),
+    });
+    const data = await res.json();
+    hideTyping();
+    addBotMessage(data.reply || (currentLang === 'fa' ? 'متاسفم، مشکلی پیش اومد.' : 'Sorry, something went wrong.'));
+  } catch (err) {
+    hideTyping();
+    addBotMessage(currentLang === 'fa' ? '⚠️ خطا در اتصال به سرور.' : '⚠️ Connection error.');
+  }
+}
+
+chatForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const text = chatInput.value.trim();
+  if (!text) return;
+  chatInput.value = '';
+  sendChatMessage(text);
+});
+
+// ---------------- init ----------------
+applyLang('fa');
+loadServices();
+
+</script>
+</body>
+</html>
