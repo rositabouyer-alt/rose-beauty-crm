@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rose Beauty • CRM Dashboard</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+<div class="bg-anim">
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="blob blob3"></div>
+</div>
+
+<svg style="display:none">
+  <symbol id="rose-icon" viewBox="0 0 64 64">
+    <path d="M32 6c6 4 10 10 8 18-1 5-6 8-11 6-4-2-5-7-2-10 3-3 8-2 9 2" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    <path d="M32 58c-9-10-15-22-10-34 3-7 10-11 17-9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="32" cy="22" r="4" fill="currentColor"/>
+  </symbol>
+</svg>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo"><svg class="icon-lg" viewBox="0 0 64 64"><use href="#rose-icon"/></svg></div>
+      <div>
+        <div class="brand-title">Rose Beauty</div>
+        <div class="brand-sub">CRM Control Center</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-item active" data-tab="overview"><svg class="nav-icon" viewBox="0 0 64 64"><use href="#rose-icon"/></svg> Overview</button>
+      <button class="nav-item" data-tab="channels"><svg class="nav-icon" viewBox="0 0 64 64"><use href="#rose-icon"/></svg> Channels</button>
+      <button class="nav-item" data-tab="bookings"><svg class="nav-icon" viewBox="0 0 64 64"><use href="#rose-icon"/></svg> Bookings</button>
+      <button class="nav-item" data-tab="calls"><svg class="nav-icon" viewBox="0 0 64 64"><use href="#rose-icon"/></svg> Call Requests</button>
+      <button class="nav-item" data-tab="services"><svg class="nav-icon" viewBox="0 0 64 64"><use href="#rose-icon"/></svg> Services & Prices</button>
+      <button class="nav-item" data-tab="widget"><svg class="nav-icon" viewBox="0 0 64 64"><use href="#rose-icon"/></svg> Test Website Chat</button>
+      <button class="nav-item" data-tab="settings"><svg class="nav-icon" viewBox="0 0 64 64"><use href="#rose-icon"/></svg> Settings</button>
+    </nav>
+
+    <a class="nav-item" href="/website.html" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;"><svg class="nav-icon" viewBox="0 0 64 64"><use href="#rose-icon"/></svg> View Public Website</a>
+
+    <div class="sidebar-footer">Built for Rose Beauty Salon</div>
+  </aside>
+
+  <main class="content">
+
+    <!-- OVERVIEW -->
+    <section id="tab-overview" class="tab active">
+      <h1>Overview</h1>
+      <div class="stats-grid" id="stats-grid"></div>
+      <div class="card">
+        <h3>Messages by channel</h3>
+        <div id="channel-bars" class="channel-bars"></div>
+      </div>
+    </section>
+
+    <!-- CHANNELS -->
+    <section id="tab-channels" class="tab">
+      <h1>Channels</h1>
+      <div class="channel-grid" id="channel-grid"></div>
+
+      <div class="split-view" id="conversation-view" style="display:none;">
+        <div class="contact-list card" id="contact-list"></div>
+        <div class="thread card" id="thread-view">
+          <div class="empty-state">Select a conversation to view messages</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BOOKINGS -->
+    <section id="tab-bookings" class="tab">
+      <h1>Bookings</h1>
+      <div class="card">
+        <table class="table" id="bookings-table">
+          <thead>
+            <tr><th>Customer</th><th>Phone</th><th>Service</th><th>Date</th><th>Channel</th><th>Status</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CALLS -->
+    <section id="tab-calls" class="tab">
+      <h1>Call Requests</h1>
+      <div class="card">
+        <div class="add-call-form">
+          <input id="call-phone" placeholder="Phone number" />
+          <input id="call-reason" placeholder="Reason (optional)" />
+          <button id="add-call-btn" class="btn btn-primary">Add</button>
+        </div>
+        <table class="table" id="calls-table">
+          <thead>
+            <tr><th>Phone</th><th>Reason</th><th>Registered</th><th>Called?</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SERVICES -->
+    <section id="tab-services" class="tab">
+      <h1>Services & Prices</h1>
+      <div class="card">
+        <table class="table" id="services-table">
+          <thead>
+            <tr><th>Name (EN)</th><th>Name (FA)</th><th>Price</th><th>Duration (min)</th><th>Active</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div class="add-service-form">
+          <input id="svc-en" placeholder="Name (English)" />
+          <input id="svc-fa" placeholder="Name (Persian)" />
+          <input id="svc-price" type="number" placeholder="Price" />
+          <input id="svc-duration" type="number" placeholder="Duration (min)" />
+          <button id="add-service-btn" class="btn btn-primary">Add Service</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TEST WIDGET -->
+    <section id="tab-widget" class="tab">
+      <h1>Test Website Chat</h1>
+      <p class="muted">This simulates the chat widget you would embed on the salon website. It runs through the exact same AI + booking engine as Telegram/WhatsApp/Instagram.</p>
+      <div class="card chat-widget">
+        <div id="chat-log" class="chat-log"></div>
+        <div class="chat-input-row">
+          <input id="chat-input" placeholder="Type a message... (try 'hi' or 'I want to book a nail appointment')" />
+          <button id="chat-send" class="btn btn-primary">Send</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="tab-settings" class="tab">
+      <h1>Settings</h1>
+      <div class="card settings-form">
+        <label>Salon Name</label>
+        <input id="set-salon-name" />
+
+        <label>Admin Phone (receives booking + call notifications)</label>
+        <input id="set-admin-phone" />
+
+        <label>Working Hours</label>
+        <input id="set-working-hours" />
+
+        <label>AI Mode</label>
+        <select id="set-ai-mode">
+          <option value="local">Local (built-in smart responder, no API key needed)</option>
+          <option value="ollama">Ollama (local model, e.g. gemma3:4b)</option>
+          <option value="api">External API (OpenAI-compatible / Anthropic / your own model)</option>
+        </select>
+
+        <button id="save-settings-btn" class="btn btn-primary">Save Settings</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>
